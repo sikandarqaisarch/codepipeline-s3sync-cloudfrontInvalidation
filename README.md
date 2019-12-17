@@ -20,7 +20,7 @@ Structure contains cloud-formation nested stacks to create code pipeline to perf
 - Pipeline.yaml
 - Roles.yaml
       
-## [](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#prerequisites) Prerequisites
+## [](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#prerequisites)Prerequisites
 - Create a cicd folder in s3.
 - upload all stack on your desired s3 bucket in cicd folder. 
 - Create Oauth token in GitHub.
