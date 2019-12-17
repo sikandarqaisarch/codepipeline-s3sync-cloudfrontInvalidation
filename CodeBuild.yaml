@@ -1,0 +1,39 @@
+Description: This templates creates Code build.
+Parameters:
+  CodeBuildServiceRole:
+    Type: String
+    Description: Build service role Arn for codeBuild
+  ArtifactStoreS3Location:
+    Type: String
+    Description: Name of the S3 bucket to store CodePipeline artificat.
+  ApplicationName:
+    Type: String
+    Description: Application Name for the reference. 
+  StackName:
+    Type: String 
+    Description: Main Stack name for the resources reference. 
+Resources: 
+# Codebuild project which will use in codePipeline
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${ApplicationName}-${StackName}-codebuild
+      ServiceRole: !Ref CodeBuildServiceRole
+      Artifacts:
+        Location: !Ref 'ArtifactStoreS3Location'
+        Name: 'ArtifactStoreS3Location'
+        Path: 'codebuild'
+        Type: S3
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:1.0
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: "version: 0.2\n\nphases:\n  build:\n    commands:\n        - aws s3 sync . s3://$Bucket/$DeploymentPath --delete\n        - aws cloudfront create-invalidation --distribution-id $DistributionId --paths $Paths\n"
+      TimeoutInMinutes: 10
+Outputs:
+  CodeBuildProjectName:
+    Value: !Sub ${ApplicationName}-${StackName}-codebuild
+    
+      

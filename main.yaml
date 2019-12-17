@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This templates creates Code pipeline to deploy from github to s3 and invalidates cloudfront cache
+Parameters:
+  ProdBucketName:
+    Type: String
+    Description: Name of the Production S3 bucket to store application source code. ** OPTIONAL **.    
+  ArtifactStoreS3Location:
+    Type: String
+    Description: Name of the S3 bucket to store CodePipeline artificat.
+  UATBucketName:
+    Type: String
+    Description: Name of the UAT S3 bucket to store application source code.
+  GitHubOwner:
+    Type: String
+    Description: Repository owner name as per github account.
+  SecretManagerName:
+    Type: String
+    Description: Name of the secret in which github token is stored.
+  SecureStringKey:
+    Type: String
+    Description: Secret key in which github token is stored.
+  RepositoryName:
+    Type: String
+    Description: Github source code repository name.
+  BranchName:  
+    Type: String
+    Description: Branch for github source code.
+  DeploymentPath:
+    Type: String
+    Description: S3 bucket folder for source code storage.
+  UATDistributionId:
+    Type: String
+    Description: Cloudfront Distribution Id for UAT.
+  Paths:
+    Type: String 
+    Default: '/index.html'
+    Description: Path for cloudfront build command.
+  ProdDistributionId:
+    Type: String
+    Description: Cloudfront Distribution Id for Production.
+  ApplicationName:
+    Type: String
+    Description: Application Name for the reference.    
+  TemplateBucket:
+    Type: String
+    Description: Nested stacks bucket location
+Resources:
+  Roles:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:  !Sub 'https://s3.amazonaws.com/${TemplateBucket}/cicd/Roles.yaml'
+      Parameters:
+        ApplicationName: !Ref ApplicationName
+        StackName: !Sub ${AWS::StackName}
+  CodeBuild:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:  Roles
+    Properties:
+      TemplateURL:  !Sub 'https://s3.amazonaws.com/${TemplateBucket}/cicd/CodeBuild.yaml'
+      Parameters:
+        ArtifactStoreS3Location: !Ref 'ArtifactStoreS3Location'
+        CodeBuildServiceRole: !GetAtt Roles.Outputs.CodeBuildServiceRole
+        ApplicationName: !Ref ApplicationName
+        StackName: !Sub ${AWS::StackName}
+  Pipeline:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: CodeBuild
+    Properties:
+      TemplateURL:  !Sub 'https://s3.amazonaws.com/${TemplateBucket}/cicd/Pipeline.yaml'
+      Parameters:
+        CodePipelineRole: !GetAtt Roles.Outputs.CodePipelineRole
+        CodeBuildProject: !GetAtt CodeBuild.Outputs.CodeBuildProjectName        
+        ArtifactStoreS3Location: !Ref 'ArtifactStoreS3Location'  
+        GitHubOwner: !Ref 'GitHubOwner'     
+        RepositoryName: !Ref 'RepositoryName'     
+        BranchName: !Ref BranchName
+        UATBucketName: !Ref UATBucketName
+        DeploymentPath: !Ref DeploymentPath
+        ProdBucketName: !Ref ProdBucketName
+        UATDistributionId: !Ref UATDistributionId
+        ProdDistributionId: !Ref ProdDistributionId
+        SecureStringKey: !Ref SecureStringKey
+        SecretManagerName: !Ref SecretManagerName
+        Paths: !Ref Paths        
+        ApplicationName: !Ref ApplicationName
+        StackName: !Sub ${AWS::StackName}
+Outputs:
+  CodeBuildServiceRole:
+    Value: !GetAtt Roles.Outputs.CodeBuildServiceRole
+  CodePipelineRole:
+    Value: !GetAtt Roles.Outputs.CodePipelineRole
+  CodeBuildProjectName:
+    Value: !GetAtt CodeBuild.Outputs.CodeBuildProjectName      
+    
+    

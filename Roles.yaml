@@ -1,0 +1,91 @@
+Description: This templates creates Code pipeline and Code build Service roles.
+Parameters:
+  ApplicationName:
+    Type: String
+    Description: Application Name for the reference. 
+  StackName:
+    Type: String 
+    Description: Main Stack name for the resources reference. 
+Resources: 
+# Service Role for codebuild to deploy changes on cloudfront
+  CodeBuildServiceRole: 
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ApplicationName}-${StackName}-codeBuildServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "codebuild.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /service-role/
+      Policies:
+        -
+          PolicyName: !Sub ${ApplicationName}-${StackName}-codeBuildServiceRolePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "s3:*"
+                  - "cloudfront:CreateInvalidation"    
+                Resource:
+                  - "*"   
+            
+  CodePipelineRole:
+    Type: "AWS::IAM::Role"  
+    Properties:
+      RoleName: !Sub ${ApplicationName}-${StackName}-codePipelineServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "codepipeline.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:        
+        -
+          PolicyName: !Sub ${ApplicationName}-${StackName}-codePipelineServiceRolePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - "sns:*"
+                  - "s3:*"
+                  - "cloudwatch:*"
+                  - "codecommit:UploadArchive"
+                  - "codecommit:CancelUploadArchive"
+                  - "codecommit:GetCommit"                  
+                  - "codecommit:GetUploadArchiveStatus"
+                  - "codecommit:GetBranch"
+                  - "codebuild:BatchGetBuilds"
+                  - "codebuild:StartBuild"
+                  - "codedeploy:GetDeployment"
+                  - "codedeploy:GetApplication"
+                  - "codedeploy:CreateDeployment"
+                  - "codedeploy:GetApplicationRevision"
+                  - "codedeploy:RegisterApplicationRevision"
+                  - "codedeploy:GetDeploymentConfig"
+                  - "cloudfront:CreateInvalidation"
+                Resource:
+                  - "*"
+
+Outputs:
+  CodeBuildServiceRole:
+    Value: !GetAtt CodeBuildServiceRole.Arn
+  CodePipelineRole:
+    Value: !GetAtt CodePipelineRole.Arn

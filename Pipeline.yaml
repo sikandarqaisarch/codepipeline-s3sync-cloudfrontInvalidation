@@ -1,0 +1,147 @@
+Description: This templates creates Code pipeline with github webhook trigger.
+Parameters:
+  CodePipelineRole:
+    Type: String
+    Description: Pipeline role Arn for codePipeline
+  ArtifactStoreS3Location:
+    Type: String
+    Description: Name of the S3 bucket to store CodePipeline artificat.
+  GitHubOwner:
+    Type: String 
+    Description: Repository owner name as per github account.
+  RepositoryName:
+    Type: String 
+    Description: Github source code repository name.
+  BranchName:
+    Type: String     
+    Description: Branch for github source code.
+  SecretManagerName:
+    Type: String 
+    Description: Name of the secret in which github token is stored.
+  SecureStringKey:
+    Type: String     
+    Description: Secret key in which github token is stored.
+  UATBucketName:
+    Type: String  
+    Description: Name of the UAT S3 bucket to store application source code.
+  DeploymentPath:
+    Type: String  
+    Description: S3 bucket folder for source code storage.
+  CodeBuildProject:
+    Type: String  
+    Description: CodeBuild Project name for build stages.
+  UATDistributionId:
+    Type: String  
+    Description: Cloudfront Distribution Id for UAT.
+  Paths:
+    Type: String  
+    Description: Path for cloudfront build command.
+  ProdBucketName:
+    Type: String  
+    Description: Name of the Production S3 bucket to store application source code. ** OPTIONAL **. 
+  ProdDistributionId:
+    Type: String  
+    Description: Cloudfront Distribution Id for Production.
+  ApplicationName:
+    Type: String
+    Description: Application Name for the reference. 
+  StackName:
+    Type: String     
+    Description: Main Stack name for the resources reference. 
+Conditions:
+  CreateProductionStage:
+    !Not [!Equals [!Ref ProdBucketName, ""]]
+Resources: 
+# Webhook which will provide connectivity for Codepipeline to Github in source stage.
+  Webhook: 
+    Type: 'AWS::CodePipeline::Webhook' 
+    Properties:
+      AuthenticationConfiguration: 
+        SecretToken: secret 
+      Filters: 
+      - JsonPath: "$.ref" 
+        MatchEquals: refs/heads/{Branch} 
+      Authentication: GITHUB_HMAC 
+      TargetPipeline: !Ref Pipeline
+      TargetAction: SourceAction
+      Name: !Sub ${ApplicationName}-${StackName}-webhook
+      TargetPipelineVersion: !GetAtt Pipeline.Version
+      RegisterWithThirdParty: 'true'
+# Pipeline which will automatically trigger when changes occur in github desire repo and will push data to s3 and create-invalidation for cloudFront
+  Pipeline: 
+    Type: AWS::CodePipeline::Pipeline 
+    Properties: 
+      Name: !Sub ${ApplicationName}-${StackName}-CodePipeline
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactStoreS3Location
+      RoleArn: !Ref CodePipelineRole
+      Stages: 
+        - 
+          Name: Source
+          Actions: 
+            - 
+              Name: SourceAction
+              ActionTypeId: 
+                Category: Source
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
+              OutputArtifacts: 
+                - Name: SourceOutput
+              Configuration:             
+                Owner: !Ref 'GitHubOwner'     
+                Repo: !Ref 'RepositoryName'     
+                Branch: !Ref 'BranchName'
+                OAuthToken: !Sub '{{resolve:secretsmanager:${SecretManagerName}:SecretString:${SecureStringKey}}}'
+                PollForSourceChanges: false
+              RunOrder: 1
+        -
+          Name: UAT
+          Actions:
+            -
+              Name: UAT-S3Sync-CloudfrontDeployment
+              InputArtifacts:
+                - Name: SourceOutput
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+                EnvironmentVariables: !Sub '[{"name":"DistributionId","value":"${UATDistributionId}","type":"PLAINTEXT"},{"name":"Paths","value":"${Paths}","type":"PLAINTEXT"},{"name":"Bucket","value":"${UATBucketName}","type":"PLAINTEXT"},{"name":"DeploymentPath","value":"${DeploymentPath}","type":"PLAINTEXT"}]'
+              RunOrder: 2
+
+        -
+          !If 
+            - CreateProductionStage
+            - Name: Production
+              Actions:
+                -
+                  Name: ManualApprovalForProduction
+                  ActionTypeId:
+                    Category: Approval
+                    Owner: AWS
+                    Version: 1
+                    Provider: Manual
+                  Configuration:
+                    CustomData: Approve to trigger Job.
+                  RunOrder: 1
+                -
+                  Name: Production-S3Sync-CloudfrontDeployment
+                  InputArtifacts:
+                    - Name: SourceOutput
+                  ActionTypeId:
+                    Category: Build
+                    Owner: AWS
+                    Version: 1
+                    Provider: CodeBuild
+                  Configuration:
+                    ProjectName: !Ref CodeBuildProject
+                    EnvironmentVariables: !Sub '[{"name":"DistributionId","value":"${ProdDistributionId}","type":"PLAINTEXT"},{"name":"Paths","value":"${Paths}","type":"PLAINTEXT"},{"name":"Bucket","value":"${ProdBucketName}","type":"PLAINTEXT"},{"name":"DeploymentPath","value":"${DeploymentPath}","type":"PLAINTEXT"}]'
+                  RunOrder: 3
+            - !Ref AWS::NoValue 
+
+
+            
