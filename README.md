@@ -54,3 +54,4 @@ Structure contains cloud-formation nested stacks to create code pipeline to perf
 
 
 ## [](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Output)Output
+![Image description](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation/blob/master/output.png)
