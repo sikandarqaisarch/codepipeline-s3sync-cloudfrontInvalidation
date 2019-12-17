@@ -15,8 +15,8 @@ This repository contains cloud-formation nested stacks to create code pipeline t
 ## Table of contents
 -   [Structure](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#structure)
 -   [Prerequisites](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#prerequisites)
--   [Parameters](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Parameters)
-- [Deploy Stack](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
+-   [Deploy Stack](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
+-   [Parameters](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
 -   [Output](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Output)
 
 
