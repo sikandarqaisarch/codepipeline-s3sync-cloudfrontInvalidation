@@ -3,17 +3,6 @@
 This repository contains cloud-formation nested stacks to create code pipeline to perform s3 sync from GitHub repository and cloud-front invalidation. Codepipeline contains two stages one for UAT and other for Production. Both stages contains code-build to perform actions. Production stage has its manual trigger and optional as well which you can define in parameters.
 ## Table of contents
 -   [Structure](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#structure)
--   [Prerequisites](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidationStack#prerequisites)
--   [Parameters](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Parameters)
-- [Deploy Stack](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
--   [Output](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Output)
-
-
-# Cloud-formation nested stacks to s3 sync from GitHub and cloud-front invalidation.
-## Description
-This repository contains cloud-formation nested stacks to create code pipeline to perform s3 sync from GitHub repository and cloud-front invalidation. Codepipeline contains two stages one for UAT and other for Production. Both stages contains code-build to perform actions. Production stage has its manual trigger and optional as well which you can define in parameters.
-## Table of contents
--   [Structure](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#structure)
 -   [Prerequisites](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#prerequisites)
 -   [Deploy Stack](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
 -   [Parameters](https://github.com/sikandarqaisarch/codepipeline-s3sync-cloudfrontInvalidation#Deploy-Stack)
